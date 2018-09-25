@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>S3LogDownloader</title>
+</head>
+<body>
+    <input id="url" style="width: 1000px"/><br>
+    <button onclick="download()">Download</button>
+
+</body>
+<script type="text/javascript" src="javascripts/jquery-3.3.1.min.js"></script>
+<script type="text/javascript" src="javascripts/aws-sdk-2.321.0.min.js"></script>
+<script>
+    function download() {
+        var url = $("#url").val();
+        if (url === null) {
+            alert("Please input a valid url");
+            return;
+        }
+        if (!url.startsWith("https://s3-us-west-2.amazonaws.com/roav-pr/log/")) {
+            alert("Please input a valid url");
+            return;
+        }
+        var path = url.replace("https://s3-us-west-2.amazonaws.com/roav-pr/", "");
+        var bucket = "roav-pr";
+
+        var s3 = new AWS.S3();
+        s3.config.credentials = new AWS.CognitoIdentityCredentials({
+            IdentityPoolId: "us-west-2:38e8ad4b-a74a-4db5-a73c-2e2e1f4f0728"
+        }, {
+            region: 'us-west-2',
+            httpOptions: {
+                timeout: 10000
+            }
+        });
+        s3.config.region = 'us-west-2';
+        var params = {
+            Bucket: bucket,
+            Key: path,
+        };
+        // 获取真正的下载链接
+        s3.getSignedUrl('getObject', params, function (err, url) {
+            console.log('The download url is', url);
+            window.open(url);
+        });
+    }
+</script>
+</html>
